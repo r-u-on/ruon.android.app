@@ -8,8 +8,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AbsListView;
@@ -19,17 +17,12 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.gson.Gson;
 import com.ruon.app.R;
-
-import org.parceler.Parcels;
 
 import java.util.ArrayList;
 
@@ -119,7 +112,7 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
         Intent alarmDetails = new Intent(this, AlarmDetailsActivity.class);
         TheAlarm alarm = getAdapter().getItem(position);
         UserLog.i(TAG, "OnAlarm click - " + alarm);
-        alarmDetails.putExtra(TheAlarm.TAG, Parcels.wrap(alarm));
+        alarmDetails.putExtra(TheAlarm.TAG, new Gson().toJson(alarm));
         startActivityForResult(alarmDetails, 11);
     }
 

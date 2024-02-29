@@ -2,18 +2,14 @@ package ruon.android.activities;
 
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.parceler.Parcels;
-
-import ruon.android.util.TheAlarm;
-
+import com.google.gson.Gson;
 import com.ruon.app.R;
 import com.ruon.app.databinding.AlarmDetailsActivityBinding;
 
+import ruon.android.util.TheAlarm;
 import ruon.android.util.UserLog;
 
 /**
@@ -33,12 +29,11 @@ public class AlarmDetailsActivity extends AppCompatActivity {
         binding = AlarmDetailsActivityBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         getAlarmInfo();
-        setContentView(R.layout.alarm_details_activity);
         updateViews();
     }
 
     private void getAlarmInfo() {
-        mAlarm = Parcels.unwrap(getIntent().getParcelableExtra(TheAlarm.TAG));
+        mAlarm = new Gson().fromJson(getIntent().getStringExtra(TheAlarm.TAG), TheAlarm.class);
         UserLog.i(TAG, "Alarm - " + mAlarm);
     }
 
@@ -77,10 +72,9 @@ public class AlarmDetailsActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

@@ -2,14 +2,11 @@ package ruon.android.util;
 
 import com.google.gson.annotations.SerializedName;
 
-import org.parceler.Parcel;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import ruon.rssapi.Alarm;
 
-@Parcel(Parcel.Serialization.METHOD)
 public class TheAlarm {
     public static final String TAG = TheAlarm.class.getSimpleName();
 
