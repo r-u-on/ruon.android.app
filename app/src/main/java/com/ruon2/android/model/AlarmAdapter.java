@@ -7,12 +7,11 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-
 import com.ruon2.android.util.TheAlarm;
+import com.ruon2.app.R;
 import com.ruon2.rssapi.Alarm;
 
-import com.ruon2.app.R;
+import java.util.ArrayList;
 
 /**
  * Created by Ivan on 6/26/2015.

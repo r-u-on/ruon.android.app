@@ -15,11 +15,7 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 
-import com.ruon2.app.R;
-import com.ruon2.app.databinding.ActivityLoginBinding;
-
-import java.util.Calendar;
-
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.ruon2.android.model.MyPreferenceManager;
 import com.ruon2.android.model.NetworkResult;
 import com.ruon2.android.model.WindowInsetsManager;
@@ -29,6 +25,10 @@ import com.ruon2.android.net.NetworkTask;
 import com.ruon2.android.util.InfoDialog;
 import com.ruon2.android.util.NetworkUtils;
 import com.ruon2.android.util.UserLog;
+import com.ruon2.app.R;
+import com.ruon2.app.databinding.ActivityLoginBinding;
+
+import java.util.Calendar;
 
 public class LoginActivity extends WorkerActivity implements NetworkTask.NetworkTaskListener {
 
@@ -49,6 +49,7 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
         new WindowInsetsManager().handleWindowInsets(this, binding.container);
 
         updateViews();
+        warmUpFcmToken();
     }
 
     @Override
@@ -87,22 +88,78 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
 
             String username = binding.email.getText().toString().trim();
             String password = binding.password.getText().toString().trim();
-            String token = MyPreferenceManager.getFcmToken(this);
-            if (token != null && !MyPreferenceManager.isFcmRegisteredOnOurServer(this)) {
-                UserLog.i(TAG, "Should register on Server!! - " + username);
-                FcmRegisterWS task = new FcmRegisterWS(username, password, android.os.Build.MODEL, token, (result1, o1) -> {
-                    UserLog.i(TAG, "Server register response! - " + result1);
-                    if (result1 == NetworkResult.OK) {
-                        UserLog.i(TAG, "Successfully registered on server");
-                        MyPreferenceManager.setFcmRegisteredOnServer(this, true);
-                    }
-                });
-                task.execute();
-            }
 
-            mHandler = new Handler();
-            mHandler.postDelayed(mGcmChecker, 2 * DateUtils.SECOND_IN_MILLIS);
+            String fcmToken = MyPreferenceManager.getFcmToken(this);
+            if (fcmToken != null) {
+                onFcmTokenReady(username, password, fcmToken);
+            } else {
+                // onNewToken() has not delivered a token yet (first launch, or the
+                // callback simply has not fired). Fetch it proactively so login cannot
+                // hang waiting on mGcmChecker for a registration that never starts.
+                UserLog.i(TAG, "No cached FCM token - fetching it proactively");
+                fetchFcmTokenThenRegister(username, password);
+            }
         }
+    }
+
+    /**
+     * Actively requests the FCM registration token instead of only waiting for
+     * {@link com.ruon2.android.services.RUOnMessagingService#onNewToken}. On success we
+     * cache it and continue the normal server-registration flow; on failure we surface an
+     * error immediately rather than letting {@link #mGcmChecker} time out silently.
+     */
+    private void fetchFcmTokenThenRegister(String username, String password) {
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (binding == null) {
+                return; // activity was torn down while the async fetch was in flight
+            }
+            if (task.isSuccessful() && task.getResult() != null) {
+                String fcmToken = task.getResult();
+                UserLog.i(TAG, "Fetched FCM token - " + fcmToken);
+                MyPreferenceManager.saveFirebaseToken(this, fcmToken);
+                onFcmTokenReady(username, password, fcmToken);
+            } else {
+                UserLog.e(TAG, "Failed to fetch FCM token - " + task.getException());
+                hideProgress();
+                binding.alertMessage.setText(getString(R.string.authentication_error));
+            }
+        });
+    }
+
+    /**
+     * Registers this device's FCM token on the R-U-On server (when not already done) and
+     * starts polling for that registration to complete.
+     */
+    private void onFcmTokenReady(String username, String password, String fcmToken) {
+        if (!MyPreferenceManager.isFcmRegisteredOnOurServer(this)) {
+            UserLog.i(TAG, "Should register on Server!! - " + username);
+            FcmRegisterWS task = new FcmRegisterWS(username, password, android.os.Build.MODEL, fcmToken, (result1, o1) -> {
+                UserLog.i(TAG, "Server register response! - " + result1);
+                if (result1 == NetworkResult.OK) {
+                    UserLog.i(TAG, "Successfully registered on server");
+                    MyPreferenceManager.setFcmRegisteredOnServer(this, true);
+                }
+            });
+            task.execute();
+        }
+
+        mHandler = new Handler();
+        mHandler.postDelayed(mGcmChecker, 2 * DateUtils.SECOND_IN_MILLIS);
+    }
+
+    /**
+     * Kicks off FCM token retrieval as soon as the screen opens so the token is usually
+     * cached by the time the user finishes typing their credentials. Safe to call
+     * repeatedly - FCM returns the already-issued token after the first fetch.
+     */
+    private void warmUpFcmToken() {
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                MyPreferenceManager.saveFirebaseToken(getApplicationContext(), task.getResult());
+            } else {
+                UserLog.e(TAG, "FCM token warm-up failed - " + task.getException());
+            }
+        });
     }
 
     /**

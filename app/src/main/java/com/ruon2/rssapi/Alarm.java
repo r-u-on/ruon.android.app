@@ -1,8 +1,8 @@
 package com.ruon2.rssapi;
 
-import org.w3c.dom.Element;
-
 import static com.ruon2.rssapi.common.Util.eq;
+
+import org.w3c.dom.Element;
 
 public class Alarm {
 
@@ -35,13 +35,13 @@ public class Alarm {
         severity = Severity.valueOf(title[1]);
 
 
-        String [] dl = ds.split("<br>");
+        String[] dl = ds.split("<br>");
 
         resource = dl[0].substring("Resource: ".length()).trim();
         description = dl[1].trim();
         date = dl[2].trim();
 
-        if (dl.length>3) {
+        if (dl.length > 3) {
             if (dl[3].startsWith("Group:")) {
                 group = dl[3].substring("Group: ".length()).trim();
             }
@@ -80,10 +80,10 @@ public class Alarm {
 
     @Override
     public String toString() {
-        Object [] oo = {guid, agent, severity, resource, description, date, group};
+        Object[] oo = {guid, agent, severity, resource, description, date, group};
         String s = "";
-        for (Object o:oo) {
-            s+=o+"\n";
+        for (Object o : oo) {
+            s += o + "\n";
         }
         return s;
     }

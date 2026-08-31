@@ -1,18 +1,17 @@
 package com.ruon2.android.util;
 
 import com.google.gson.annotations.SerializedName;
+import com.ruon2.rssapi.Alarm;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.ruon2.rssapi.Alarm;
 
 public class TheAlarm {
     public static final String TAG = TheAlarm.class.getSimpleName();
 
     public static List<TheAlarm> convert(List<Alarm> alarms) {
         List<TheAlarm> theAlarms = new ArrayList<>();
-        for (Alarm alarm:alarms) {
+        for (Alarm alarm : alarms) {
             theAlarms.add(new TheAlarm(alarm));
         }
         return theAlarms;
@@ -21,7 +20,8 @@ public class TheAlarm {
     public static enum Sound {
         dcagd, dccnc, dcgen, dcprd, digen, dmacs, dmcpu, dmgen, dmhdd, dmmem,
         dmswp, ecgen, eigen, emagr, emgen, ucagd, uccnc, ucgen, ucprd, uigen, umacs,
-        umcpu, umgen, umhdd, ummem, umswp;    }
+        umcpu, umgen, umhdd, ummem, umswp;
+    }
 
 
     @SerializedName("Guid")
@@ -40,8 +40,6 @@ public class TheAlarm {
     private String sound;
 
 
-
-
     public TheAlarm(Alarm alarm) {
         guid = alarm.getGuid();
         agent = alarm.getAgent();
@@ -53,7 +51,7 @@ public class TheAlarm {
     }
 
 
-    public TheAlarm(){ /*Required empty bean constructor*/ }
+    public TheAlarm() { /*Required empty bean constructor*/ }
 
 
     public String getGuid() {
@@ -63,9 +61,11 @@ public class TheAlarm {
     public void setGuid(String guid) {
         this.guid = guid;
     }
+
     public void setAgent(String agent) {
         this.agent = agent;
     }
+
     public String getAgent() {
         return agent;
     }
@@ -73,6 +73,7 @@ public class TheAlarm {
     public Alarm.Severity getSeverity() {
         return severity;
     }
+
     public void setSeverity(Alarm.Severity severity) {
         this.severity = severity;
     }
@@ -88,6 +89,7 @@ public class TheAlarm {
     public void setDescription(String description) {
         this.description = description;
     }
+
     public String getDescription() {
         return description;
     }
@@ -104,20 +106,20 @@ public class TheAlarm {
         return group;
     }
 
-    public void setSound(String sound){
+    public void setSound(String sound) {
         this.sound = sound;
     }
 
-    public String getSound(){
+    public String getSound() {
         return sound;
     }
 
     @Override
     public String toString() {
-        Object [] oo = {guid, agent, severity, resource, description, date, group};
+        Object[] oo = {guid, agent, severity, resource, description, date, group};
         String s = "";
-        for (Object o:oo) {
-            s+=o+"\n";
+        for (Object o : oo) {
+            s += o + "\n";
         }
         return s;
     }

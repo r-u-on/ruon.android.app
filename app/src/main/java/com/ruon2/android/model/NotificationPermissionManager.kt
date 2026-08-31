@@ -14,8 +14,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import com.ruon2.app.R
 import com.ruon2.android.util.UserLog
+import com.ruon2.app.R
 
 class NotificationPermissionManager(activityResultRegistry: ActivityResultRegistry) {
 
@@ -35,10 +35,13 @@ class NotificationPermissionManager(activityResultRegistry: ActivityResultRegist
             "notifications permission not granted"
         }
 
-        UserLog.i(TAG, message)
+        UserLog.i(
+            TAG,
+            message
+        )
     }
 
-    fun handleNotificationPermission(activity: ComponentActivity, ) {
+    fun handleNotificationPermission(activity: ComponentActivity) {
         // cases where permission is not needed
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
 
@@ -47,17 +50,26 @@ class NotificationPermissionManager(activityResultRegistry: ActivityResultRegist
 
         when {
             isNotificationPermissionGranted(activity) -> {
-                MyPreferenceManager.setShouldShowNotificationPermissionRational(activity, false)
+                MyPreferenceManager.setShouldShowNotificationPermissionRational(
+                    activity,
+                    false
+                )
             }
+
             shouldShowRequestPermissionRationale -> {
                 // after notification permission request was denied once
                 launchNotificationPermissionRequest(notificationPermissionLauncher)
-                MyPreferenceManager.setShouldShowNotificationPermissionRational(activity, true)
+                MyPreferenceManager.setShouldShowNotificationPermissionRational(
+                    activity,
+                    true
+                )
             }
+
             MyPreferenceManager.shouldShowNotificationPermissionRational(activity) -> {
                 // showing rational after notification permission request was denied twice
                 showNotificationPermissionRational(activity)
             }
+
             else -> {
                 // first time requesting permission
                 launchNotificationPermissionRequest(notificationPermissionLauncher)
@@ -78,12 +90,16 @@ class NotificationPermissionManager(activityResultRegistry: ActivityResultRegist
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun showNotificationPermissionRational(context: Context, ) {
+    fun showNotificationPermissionRational(context: Context) {
         val positiveButtonText =
             context.getString(R.string.notification_permission_required_dialog_go_to_settings)
         val negativeButtonText = context.getString(R.string.notification_permission_required_cancel)
         val appSettingsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            val uri = Uri.fromParts("package", context.packageName, null)
+            val uri = Uri.fromParts(
+                "package",
+                context.packageName,
+                null
+            )
             data = uri
         }
 
@@ -99,7 +115,10 @@ class NotificationPermissionManager(activityResultRegistry: ActivityResultRegist
 
         // Set the color for the cancel button to red
         dialog.setOnShowListener {
-            val color = ContextCompat.getColor(context, android.R.color.holo_red_dark)
+            val color = ContextCompat.getColor(
+                context,
+                android.R.color.holo_red_dark
+            )
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(color)
         }
 

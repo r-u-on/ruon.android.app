@@ -1,10 +1,10 @@
 package com.ruon2.rssapi.http;
 
-import java.io.*;
+import static com.ruon2.rssapi.common.Util.drain;
+
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
-
-import static com.ruon2.rssapi.common.Util.drain;
 
 public class Http {
 
@@ -33,8 +33,8 @@ public class Http {
         }
     }
 
-    public static void get(ResponseListener responseListener, String uri, Object ... params) {
-        for (int i=0;i<params.length;++i) {
+    public static void get(ResponseListener responseListener, String uri, Object... params) {
+        for (int i = 0; i < params.length; ++i) {
             params[i] = urlencode(params[i].toString());
         }
         uri = String.format(uri, params);

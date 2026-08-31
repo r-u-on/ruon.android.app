@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
-    <permission android:name="com.ruon2.app.gcm.permission.C2D_MESSAGE"
+    <permission
+        android:name="com.ruon2.app.gcm.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
     <uses-permission android:name="com.ruon2.app.gcm.permission.C2D_MESSAGE" />
 
@@ -18,12 +20,12 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name="com.ruon2.android.activities.LoginActivity"
+            android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:exported="true">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -31,14 +33,12 @@
         </activity>
         <activity
             android:name="com.ruon2.android.activities.MainActivity"
-            android:screenOrientation="portrait"
-            android:label="@string/alarms_title" >
-        </activity>
+            android:label="@string/alarms_title"
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name="com.ruon2.android.activities.AlarmDetailsActivity"
-            android:screenOrientation="portrait"
-            android:label="@string/app_name" >
-        </activity>
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"></activity>
 
         <service
             android:name="com.ruon2.android.services.RUOnMessagingService"

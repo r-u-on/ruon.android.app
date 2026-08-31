@@ -6,12 +6,11 @@ import android.view.MenuItem;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
-import com.ruon2.app.R;
-import com.ruon2.app.databinding.AlarmDetailsActivityBinding;
-
 import com.ruon2.android.model.WindowInsetsManager;
 import com.ruon2.android.util.TheAlarm;
 import com.ruon2.android.util.UserLog;
+import com.ruon2.app.R;
+import com.ruon2.app.databinding.AlarmDetailsActivityBinding;
 
 /**
  * Created by Ivan on 6/29/2015.

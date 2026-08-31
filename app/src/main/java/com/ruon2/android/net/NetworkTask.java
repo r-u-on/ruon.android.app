@@ -14,7 +14,7 @@ public abstract class NetworkTask extends AsyncTask {
         return null;
     }
 
-    public interface NetworkTaskListener{
+    public interface NetworkTaskListener {
         void OnResult(NetworkResult result, Object o);
     }
 

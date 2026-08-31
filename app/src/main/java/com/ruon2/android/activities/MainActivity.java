@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,14 +13,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBar;
+import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.gson.Gson;
-import com.ruon2.app.R;
-import com.ruon2.app.databinding.ActivityMainBinding;
-
-import java.util.ArrayList;
-
 import com.ruon2.android.model.AlarmAdapter;
 import com.ruon2.android.model.MyPreferenceManager;
 import com.ruon2.android.model.NetworkResult;
@@ -32,8 +27,15 @@ import com.ruon2.android.net.NetworkTask;
 import com.ruon2.android.util.NetworkUtils;
 import com.ruon2.android.util.TheAlarm;
 import com.ruon2.android.util.UserLog;
+import com.ruon2.app.R;
+import com.ruon2.app.databinding.ActivityMainBinding;
 
-public class MainActivity extends WorkerActivity implements NetworkTask.NetworkTaskListener, AdapterView.OnItemClickListener,
+import java.util.ArrayList;
+
+public class MainActivity
+        extends WorkerActivity
+        implements NetworkTask.NetworkTaskListener,
+        AdapterView.OnItemClickListener,
         SwipeRefreshLayout.OnRefreshListener {
 
     private final String TAG = MainActivity.class.getSimpleName();
@@ -67,11 +69,9 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
     protected void onResume() {
         super.onResume();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(receiver, filter);
-        }
+        // Internal-only broadcast: always register as NOT_EXPORTED. ContextCompat
+        // applies the correct flag across all API levels (required for target SDK 36).
+        ContextCompat.registerReceiver(this, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         if (mShouldRefresh) {
             showProgress();
@@ -197,9 +197,9 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
     private void updateViews() {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
         getSupportActionBar().setIcon(R.drawable.logo_padding);
-        mRefresher = (SwipeRefreshLayout) findViewById(R.id.refresher);
+        mRefresher = findViewById(R.id.refresher);
         mRefresher.setOnRefreshListener(this);
-        mList = (ListView) findViewById(R.id.mList);
+        mList = findViewById(R.id.mList);
         mList.setAdapter(getAdapter());
         mList.setOnItemClickListener(this);
         mList.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -209,7 +209,7 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem,
-                                 int visibleItemCount, int totalItemCount) {
+                    int visibleItemCount, int totalItemCount) {
                 int topRowVerticalPosition =
                         (mList == null || mList.getChildCount() == 0) ?
                                 0 : mList.getChildAt(0).getTop();
@@ -217,7 +217,7 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
                         topRowVerticalPosition >= 0);
             }
         });
-        mNoAlarmsLabel = (TextView) findViewById(R.id.warning_label);
+        mNoAlarmsLabel = findViewById(R.id.warning_label);
     }
 
     private AlarmAdapter getAdapter() {

@@ -3,14 +3,19 @@ package com.ruon2.rssapi.common;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.*;
 
 public class Util {
 
     public static boolean eq(Object a, Object b) {
-        return a==b || (a!=null && a.equals(b));
+        return a == b || (a != null && a.equals(b));
     }
 
     public static Element parse(String xml) throws Exception {
@@ -25,7 +30,7 @@ public class Util {
             in = new BufferedInputStream(in);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             int b;
-            while ((b=in.read())>=0) {
+            while ((b = in.read()) >= 0) {
                 out.write(b);
             }
             return new String(out.toByteArray(), "utf-8");

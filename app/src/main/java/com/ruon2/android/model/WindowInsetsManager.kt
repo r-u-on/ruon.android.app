@@ -17,18 +17,27 @@ class WindowInsetsManager {
         private const val TAG = "WindowInsetsManager"
     }
 
-    fun handleWindowInsets(activity: AppCompatActivity, container: View) {
+    fun handleWindowInsets(
+        activity: AppCompatActivity,
+        container: View
+    ) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
 
         with(activity) {
             applyDarkStatusBarIcons()
             setOnApplyWindowInsetsListener()
-            manageTopContainerPadding(window, container)
+            manageTopContainerPadding(
+                window,
+                container
+            )
         }
     }
 
     private fun Activity.applyDarkStatusBarIcons() {
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        val windowInsetsController = WindowCompat.getInsetsController(
+            window,
+            window.decorView
+        )
         windowInsetsController.isAppearanceLightStatusBars = true
     }
 
@@ -39,7 +48,10 @@ class WindowInsetsManager {
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     private fun AppCompatActivity.setOnApplyWindowInsetsListener() {
         window.decorView.setOnApplyWindowInsetsListener { containerView, insets ->
-            UserLog.e(TAG, "InsetsListener call")
+            UserLog.e(
+                TAG,
+                "InsetsListener call"
+            )
 
             val systemBarsInsets = insets.getInsets(WindowInsets.Type.systemBars())
             val statusBarHeight = systemBarsInsets.top
@@ -60,7 +72,10 @@ class WindowInsetsManager {
     }
 
     /** Adds top padding to the container to prevent the ActionBar from overlapping the content. */
-    private fun AppCompatActivity.manageTopContainerPadding(window: Window, container: View) {
+    private fun AppCompatActivity.manageTopContainerPadding(
+        window: Window,
+        container: View
+    ) {
         window.decorView.post {
             supportActionBar?.let { actionBar ->
                 container.setPadding(

@@ -17,16 +17,15 @@ import androidx.core.app.TaskStackBuilder;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.ruon2.android.activities.MainActivity;
+import com.ruon2.android.model.MyPreferenceManager;
+import com.ruon2.android.util.TheAlarm;
+import com.ruon2.android.util.UserLog;
 import com.ruon2.app.R;
 
 import org.json.JSONObject;
 
 import java.util.Map;
-
-import com.ruon2.android.activities.MainActivity;
-import com.ruon2.android.model.MyPreferenceManager;
-import com.ruon2.android.util.TheAlarm;
-import com.ruon2.android.util.UserLog;
 
 public class RUOnMessagingService extends FirebaseMessagingService {
     private static final String TAG = RUOnMessagingService.class.getSimpleName();
@@ -110,6 +109,9 @@ public class RUOnMessagingService extends FirebaseMessagingService {
         Notification ntf = mBuilder.build();
         mNotificationManager.notify(sNotificationId, ntf);
         Intent intent = new Intent(MainActivity.NOTIFICATION_EVENT);
+        // Scope the broadcast to this app so it is delivered reliably under the
+        // Android 14+ implicit-broadcast restrictions (target SDK 36).
+        intent.setPackage(getPackageName());
         sendBroadcast(intent);
     }
 
