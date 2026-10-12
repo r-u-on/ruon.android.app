@@ -26,8 +26,8 @@ android {
         applicationId = "com.ruon2.app"
         minSdk = 25
         targetSdk = 36
-        versionCode = 303
-        versionName = "3.0.3"
+        versionCode = 304
+        versionName = "3.0.4"
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
