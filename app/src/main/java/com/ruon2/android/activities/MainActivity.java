@@ -12,6 +12,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -30,7 +32,7 @@ import com.ruon2.android.util.UserLog;
 import com.ruon2.app.R;
 import com.ruon2.app.databinding.ActivityMainBinding;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity
         extends WorkerActivity
@@ -52,6 +54,10 @@ public class MainActivity
     private IntentFilter filter;
     private NotificationPermissionManager notificationPermissionManager
             = new NotificationPermissionManager(getActivityResultRegistry());
+    // Coming back from alarm details must not trigger a refresh in onResume().
+    private final ActivityResultLauncher<Intent> alarmDetailsLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> mShouldRefresh = false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +97,7 @@ public class MainActivity
     protected void onPause() {
         if (mTask != null) {
             hideProgress();
-            mTask.cancel(true);
+            mTask.cancel();
         }
         mShouldRefresh = true;
         unregisterReceiver(receiver);
@@ -105,18 +111,12 @@ public class MainActivity
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        mShouldRefresh = false;
-    }
-
-    @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
         Intent alarmDetails = new Intent(this, AlarmDetailsActivity.class);
         TheAlarm alarm = getAdapter().getItem(position);
         UserLog.i(TAG, "OnAlarm click - " + alarm);
         alarmDetails.putExtra(TheAlarm.TAG, new Gson().toJson(alarm));
-        startActivityForResult(alarmDetails, 11);
+        alarmDetailsLauncher.launch(alarmDetails);
     }
 
     @Override
@@ -140,12 +140,14 @@ public class MainActivity
         hideProgress();
         if (result == NetworkResult.OK) {
             if (o != null) {
-                ArrayList<TheAlarm> items = (ArrayList<TheAlarm>) o;
+                // AlarmsWS delivers the List<TheAlarm> built by TheAlarm.convert().
+                @SuppressWarnings("unchecked")
+                List<TheAlarm> items = (List<TheAlarm>) o;
                 UserLog.i(TAG, "result - " + items.size());
                 if (items.size() == 0) {
                     // if(true){
                     mNoAlarmsLabel.setText(getString(R.string.no_alarms_title));
-                    mNoAlarmsLabel.setBackgroundColor(getResources().getColor(R.color.app_green));
+                    mNoAlarmsLabel.setBackgroundColor(ContextCompat.getColor(this, R.color.app_green));
                     mNoAlarmsLabel.setVisibility(View.VISIBLE);
                 } else {
                     getAdapter().swapData(items);
@@ -157,7 +159,7 @@ public class MainActivity
             String message = (String) o;
             UserLog.i(TAG, "Error message - " + message);
             mNoAlarmsLabel.setText(message);
-            mNoAlarmsLabel.setBackgroundColor(getResources().getColor(R.color.app_critical));
+            mNoAlarmsLabel.setBackgroundColor(ContextCompat.getColor(this, R.color.app_critical));
             mNoAlarmsLabel.setVisibility(View.VISIBLE);
         }
     }
@@ -188,7 +190,7 @@ public class MainActivity
         } else {
             mList.setAdapter(null);
             mNoAlarmsLabel.setText(getString(R.string.network_error));
-            mNoAlarmsLabel.setBackgroundColor(getResources().getColor(R.color.app_critical));
+            mNoAlarmsLabel.setBackgroundColor(ContextCompat.getColor(this, R.color.app_critical));
             mNoAlarmsLabel.setVisibility(View.VISIBLE);
             hideProgress();
         }

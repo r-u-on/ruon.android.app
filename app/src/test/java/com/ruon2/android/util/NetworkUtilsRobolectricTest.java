@@ -6,7 +6,8 @@ import static org.robolectric.Shadows.shadowOf;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -15,55 +16,51 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowConnectivityManager;
-import org.robolectric.shadows.ShadowNetworkInfo;
+import org.robolectric.shadows.ShadowNetworkCapabilities;
 
 /**
  * Robolectric tests for {@link NetworkUtils#isNetworkAvailable(Context)} across
- * connected, disconnected and no-active-network states.
+ * internet-capable, no-internet and no-active-network states.
  */
 @RunWith(RobolectricTestRunner.class)
 public class NetworkUtilsRobolectricTest {
 
     private Context context;
+    private ConnectivityManager cm;
     private ShadowConnectivityManager shadowCm;
 
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
-        ConnectivityManager cm =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         shadowCm = shadowOf(cm);
     }
 
     @Test
-    public void returnsTrue_whenConnectedAndAvailable() {
-        NetworkInfo connected = ShadowNetworkInfo.newInstance(
-                NetworkInfo.DetailedState.CONNECTED,
-                ConnectivityManager.TYPE_WIFI,
-                0,
-                /* isAvailable= */ true,
-                NetworkInfo.State.CONNECTED);
-        shadowCm.setActiveNetworkInfo(connected);
-
+    public void returnsTrue_whenActiveNetworkHasInternet() {
+        setActiveNetworkCapabilities(true);
         assertTrue(NetworkUtils.isNetworkAvailable(context));
     }
 
     @Test
-    public void returnsFalse_whenDisconnected() {
-        NetworkInfo disconnected = ShadowNetworkInfo.newInstance(
-                NetworkInfo.DetailedState.DISCONNECTED,
-                ConnectivityManager.TYPE_WIFI,
-                0,
-                /* isAvailable= */ false,
-                NetworkInfo.State.DISCONNECTED);
-        shadowCm.setActiveNetworkInfo(disconnected);
-
+    public void returnsFalse_whenActiveNetworkHasNoInternet() {
+        setActiveNetworkCapabilities(false);
         assertFalse(NetworkUtils.isNetworkAvailable(context));
     }
 
     @Test
     public void returnsFalse_whenNoActiveNetwork() {
-        shadowCm.setActiveNetworkInfo(null);
+        shadowCm.clearAllNetworks();
         assertFalse(NetworkUtils.isNetworkAvailable(context));
+    }
+
+    private void setActiveNetworkCapabilities(boolean hasInternet) {
+        Network network = cm.getActiveNetwork();
+        NetworkCapabilities capabilities = ShadowNetworkCapabilities.newInstance();
+        shadowOf(capabilities).addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+        if (hasInternet) {
+            shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        }
+        shadowCm.setNetworkCapabilities(network, capabilities);
     }
 }

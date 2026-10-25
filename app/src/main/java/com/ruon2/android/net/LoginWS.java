@@ -25,12 +25,7 @@ public class LoginWS extends NetworkTask {
     }
 
     @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-    }
-
-    @Override
-    protected Object doInBackground(Object[] objects) {
+    protected Object doInBackground() {
         rawResult = UNKNOWN_ERROR;
         API.authenticate(email, password, new API.AuthenticateListener() {
 
@@ -57,9 +52,6 @@ public class LoginWS extends NetworkTask {
 
     @Override
     protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        if (!isCancelled()) {
-            mListener.OnResult(result, o);
-        }
+        mListener.OnResult(result, o);
     }
 }

@@ -48,8 +48,7 @@ public class MainActivitySmokeTest {
 
     @After
     public void tearDown() {
-        android.preference.PreferenceManager
-                .getDefaultSharedPreferences(context).edit().clear().commit();
+        MyPreferenceManager.getPrefs(context).edit().clear().commit();
     }
 
     @Test

@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -62,7 +63,7 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
     protected void onPause() {
         if (mTask != null) {
             hideProgress();
-            mTask.cancel(true);
+            mTask.cancel();
         }
         if (mHandler != null) {
             hideProgress();
@@ -107,7 +108,13 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
      * {@link com.ruon2.android.services.RUOnMessagingService#onNewToken}. On success we
      * cache it and continue the normal server-registration flow; on failure we surface an
      * error immediately rather than letting {@link #mGcmChecker} time out silently.
+     *
+     * <p>{@code getToken()} is deprecated in favor of {@code register()}, which identifies the
+     * device by its Firebase Installation ID instead of an FCM registration token. The R-U-On
+     * server (androidNotif) stores and sends to FCM registration tokens, so moving needs a
+     * server-side change first.
      */
+    @SuppressWarnings("deprecation")
     private void fetchFcmTokenThenRegister(String username, String password) {
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
             if (binding == null) {
@@ -143,7 +150,7 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
             task.execute();
         }
 
-        mHandler = new Handler();
+        mHandler = new Handler(Looper.getMainLooper());
         mHandler.postDelayed(mGcmChecker, 2 * DateUtils.SECOND_IN_MILLIS);
     }
 
@@ -151,7 +158,9 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
      * Kicks off FCM token retrieval as soon as the screen opens so the token is usually
      * cached by the time the user finishes typing their credentials. Safe to call
      * repeatedly - FCM returns the already-issued token after the first fetch.
+     * See {@link #fetchFcmTokenThenRegister} for why the deprecated getToken() stays.
      */
+    @SuppressWarnings("deprecation")
     private void warmUpFcmToken() {
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {

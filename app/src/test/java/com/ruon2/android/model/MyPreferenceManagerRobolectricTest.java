@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
-import android.preference.PreferenceManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -34,7 +33,7 @@ public class MyPreferenceManagerRobolectricTest {
         Field sPrefs = MyPreferenceManager.class.getDeclaredField("sPrefs");
         sPrefs.setAccessible(true);
         sPrefs.set(null, null);
-        PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit();
+        MyPreferenceManager.getPrefs(context).edit().clear().commit();
     }
 
     @Test
@@ -77,5 +76,15 @@ public class MyPreferenceManagerRobolectricTest {
         MyPreferenceManager.saveFirebaseToken(context, "push");
         assertEquals("auth", MyPreferenceManager.getToken(context));
         assertEquals("push", MyPreferenceManager.getFcmToken(context));
+    }
+
+    // Users upgrading from a version that used android.preference.PreferenceManager must
+    // stay logged in, so both must resolve to the same preferences file.
+    @SuppressWarnings("deprecation")
+    @Test
+    public void readsValuesSavedByLegacyDefaultPreferences() {
+        android.preference.PreferenceManager.getDefaultSharedPreferences(context)
+                .edit().putString(MyPreferenceManager.TOKEN, "legacy-token").commit();
+        assertEquals("legacy-token", MyPreferenceManager.getToken(context));
     }
 }

@@ -7,18 +7,21 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
+
 import com.ruon2.android.util.TheAlarm;
 import com.ruon2.app.R;
 import com.ruon2.rssapi.Alarm;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Ivan on 6/26/2015.
  */
 public class AlarmAdapter extends BaseAdapter {
 
-    private ArrayList<TheAlarm> items = new ArrayList<>();
+    private List<TheAlarm> items = new ArrayList<>();
 
     @Override
     public int getCount() {
@@ -58,7 +61,7 @@ public class AlarmAdapter extends BaseAdapter {
         return items.get(i);
     }
 
-    public void swapData(ArrayList<TheAlarm> items) {
+    public void swapData(List<TheAlarm> items) {
         this.items = items;
     }
 
@@ -81,13 +84,13 @@ public class AlarmAdapter extends BaseAdapter {
             }
             switch (severity) {
                 case Minor:
-                    root.setBackgroundColor(root.getContext().getResources().getColor(R.color.app_minor));
+                    root.setBackgroundColor(ContextCompat.getColor(root.getContext(), R.color.app_minor));
                     break;
                 case Major:
-                    root.setBackgroundColor(root.getContext().getResources().getColor(R.color.app_major));
+                    root.setBackgroundColor(ContextCompat.getColor(root.getContext(), R.color.app_major));
                     break;
                 case Critical:
-                    root.setBackgroundColor(root.getContext().getResources().getColor(R.color.app_critical));
+                    root.setBackgroundColor(ContextCompat.getColor(root.getContext(), R.color.app_critical));
                     break;
             }
         }

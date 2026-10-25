@@ -14,6 +14,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.TaskStackBuilder;
+import androidx.core.content.ContextCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -66,7 +67,7 @@ public class RUOnMessagingService extends FirebaseMessagingService {
                         .setSmallIcon(R.drawable.notification)
                         .setContentTitle(getString(R.string.app_name))
                         .setAutoCancel(true)
-                        .setColor(getResources().getColor(R.color.app_green))
+                        .setColor(ContextCompat.getColor(this, R.color.app_green))
                         .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE)
                         .setContentText(title);
         String sound = getSound(soundRaw);
@@ -245,6 +246,9 @@ public class RUOnMessagingService extends FirebaseMessagingService {
         return "android.resource://" + getPackageName() + "/" + path;
     }
 
+    // Deprecated with getToken() in favor of onRegistered() (Firebase Installation IDs). The
+    // R-U-On server still sends to FCM registration tokens, so this callback stays for now.
+    @SuppressWarnings("deprecation")
     @Override
     public void onNewToken(@NonNull String token) {
         UserLog.i(TAG, "onNewToken called, new Firebase token: " + token);

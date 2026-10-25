@@ -14,6 +14,7 @@ import com.ruon2.android.util.UserLog;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -35,14 +36,17 @@ public class FcmRegisterWS extends NetworkTask {
     public FcmRegisterWS(String email, String password, String name, String token, NetworkTaskListener listener) {
         this.email = email;
         this.password = password;
-        this.mName = URLEncoder.encode(name);
+        this.mName = encode(name);
         this.mToken = token;
         mListener = listener;
     }
 
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
+    private static String encode(String value) {
+        try {
+            return URLEncoder.encode(value, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 is always supported", e);
+        }
     }
 
 //    @Override
@@ -75,7 +79,7 @@ public class FcmRegisterWS extends NetworkTask {
 //    }
 
     @Override
-    protected Object doInBackground(Object[] objects) {
+    protected Object doInBackground() {
         HttpURLConnection urlConnection = null;
         try {
             // Construct the URL
@@ -132,11 +136,8 @@ public class FcmRegisterWS extends NetworkTask {
 
     @Override
     protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        if (!isCancelled()) {
-            if (mListener != null) {
-                mListener.OnResult(result, o);
-            }
+        if (mListener != null) {
+            mListener.OnResult(result, o);
         }
     }
 }

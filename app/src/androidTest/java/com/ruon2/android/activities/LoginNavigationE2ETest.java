@@ -7,7 +7,6 @@ import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Context;
-import android.preference.PreferenceManager;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -45,7 +44,7 @@ public class LoginNavigationE2ETest {
     @After
     public void tearDown() {
         Intents.release();
-        PreferenceManager.getDefaultSharedPreferences(context).edit().clear().commit();
+        MyPreferenceManager.getPrefs(context).edit().clear().commit();
     }
 
     @Test

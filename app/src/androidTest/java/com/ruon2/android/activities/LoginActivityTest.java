@@ -13,7 +13,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.containsString;
 
 import android.content.Context;
-import android.preference.PreferenceManager;
+import com.ruon2.android.model.MyPreferenceManager;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -36,7 +36,7 @@ public class LoginActivityTest {
     public void clearSession() {
         // Ensure no saved token, otherwise onResume immediately redirects to MainActivity.
         Context ctx = ApplicationProvider.getApplicationContext();
-        PreferenceManager.getDefaultSharedPreferences(ctx).edit().clear().commit();
+        MyPreferenceManager.getPrefs(ctx).edit().clear().commit();
     }
 
     @Test

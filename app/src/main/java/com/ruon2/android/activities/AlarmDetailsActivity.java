@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.gson.Gson;
 import com.ruon2.android.model.WindowInsetsManager;
@@ -71,13 +72,13 @@ public class AlarmDetailsActivity extends AppCompatActivity {
             binding.alarmDetail.setText(mAlarm.getGuid() + "\n\n" + mAlarm.getDescription());
             switch (mAlarm.getSeverity()) {
                 case Minor:
-                    binding.severityContainer.setBackgroundColor(getResources().getColor(R.color.app_minor));
+                    binding.severityContainer.setBackgroundColor(ContextCompat.getColor(this, R.color.app_minor));
                     break;
                 case Major:
-                    binding.severityContainer.setBackgroundColor(getResources().getColor(R.color.app_major));
+                    binding.severityContainer.setBackgroundColor(ContextCompat.getColor(this, R.color.app_major));
                     break;
                 case Critical:
-                    binding.severityContainer.setBackgroundColor(getResources().getColor(R.color.app_critical));
+                    binding.severityContainer.setBackgroundColor(ContextCompat.getColor(this, R.color.app_critical));
                     break;
             }
         }

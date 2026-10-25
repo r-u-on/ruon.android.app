@@ -2,7 +2,6 @@ package com.ruon2.android.model;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 /**
  * Created by Ivan on 6/26/2015.
@@ -46,9 +45,15 @@ public class MyPreferenceManager {
         return getPrefs(context).getString(FCM_TOKEN, null);
     }
 
-    private static SharedPreferences getPrefs(Context context) {
+    /**
+     * Returns the app's default preferences file. Uses the same file name as the deprecated
+     * {@code android.preference.PreferenceManager.getDefaultSharedPreferences()}, so data
+     * saved by earlier versions (login token, FCM state) is kept on upgrade.
+     */
+    public static SharedPreferences getPrefs(Context context) {
         if (sPrefs == null) {
-            sPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+            sPrefs = context.getSharedPreferences(
+                    context.getPackageName() + "_preferences", Context.MODE_PRIVATE);
         }
         return sPrefs;
     }
