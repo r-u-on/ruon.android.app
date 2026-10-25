@@ -56,6 +56,13 @@
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/app_green" />
 
+        <!-- true switches FCM from registration tokens to Firebase Installation IDs
+             (register()/onRegistered()); getToken() then fails. Set from the
+             ruon.fcmUseInstallationId Gradle property. -->
+        <meta-data
+            android:name="firebase_messaging_installation_id_enabled"
+            android:value="${fcmUseInstallationId}" />
+
     </application>
 
 </manifest>

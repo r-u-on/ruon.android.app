@@ -11,6 +11,7 @@ public class MyPreferenceManager {
     private static SharedPreferences sPrefs;
     public static final String TOKEN = "token";
     public static final String FCM_TOKEN = "fcm_token";
+    public static final String FCM_INSTALLATION_ID = "fcm_installation_id";
     public static final String REGISTERED_ON_SERVER = "REGISTERED_ON_SERVER";
 
     private static final String SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE = "shouldShowRequestPermissionRationale";
@@ -43,6 +44,16 @@ public class MyPreferenceManager {
 
     public static String getFcmToken(Context context) {
         return getPrefs(context).getString(FCM_TOKEN, null);
+    }
+
+    public static void saveFcmInstallationId(Context context, String installationId) {
+        SharedPreferences.Editor editor = getEditor(context);
+        editor.putString(FCM_INSTALLATION_ID, installationId);
+        editor.commit();
+    }
+
+    public static String getFcmInstallationId(Context context) {
+        return getPrefs(context).getString(FCM_INSTALLATION_ID, null);
     }
 
     /**

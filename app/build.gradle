@@ -31,6 +31,12 @@ android {
         multiDexEnabled = true
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // How the R-U-On server addresses push messages: FCM registration tokens (false) or
+        // Firebase Installation IDs (true). See ruon.fcmUseInstallationId in gradle.properties.
+        def fcmUseInstallationId = (project.findProperty('ruon.fcmUseInstallationId') ?: 'false').toBoolean()
+        buildConfigField "boolean", "FCM_USE_INSTALLATION_ID", "${fcmUseInstallationId}"
+        manifestPlaceholders = [fcmUseInstallationId: "${fcmUseInstallationId}"]
     }
 
     signingConfigs {
@@ -130,6 +136,7 @@ dependencies {
     implementation platform("com.google.firebase:firebase-bom:34.18.0")
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-installations'
 
     // Local unit tests
     testImplementation 'junit:junit:4.13.2'

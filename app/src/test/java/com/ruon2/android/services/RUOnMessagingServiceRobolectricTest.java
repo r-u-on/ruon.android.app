@@ -23,7 +23,7 @@ import org.robolectric.RobolectricTestRunner;
 /**
  * Robolectric tests for {@link RUOnMessagingService}: FCM data-message handling,
  * notification-channel creation, sound mapping, resilience to bad payloads, and
- * token persistence on {@code onNewToken}.
+ * push id persistence on {@code onNewToken} and {@code onRegistered}.
  */
 @RunWith(RobolectricTestRunner.class)
 public class RUOnMessagingServiceRobolectricTest {
@@ -102,6 +102,17 @@ public class RUOnMessagingServiceRobolectricTest {
 
         assertEquals("fresh-fcm-token", MyPreferenceManager.getFcmToken(service));
         assertFalse("registration must be reset so the app re-registers the new token",
+                MyPreferenceManager.isFcmRegisteredOnOurServer(service));
+    }
+
+    @Test
+    public void onRegistered_persistsInstallationIdAndResetsRegistration() {
+        MyPreferenceManager.setFcmRegisteredOnServer(service, true);
+
+        service.onRegistered("fresh-installation-id");
+
+        assertEquals("fresh-installation-id", MyPreferenceManager.getFcmInstallationId(service));
+        assertFalse("registration must be reset so the app re-registers the new id",
                 MyPreferenceManager.isFcmRegisteredOnOurServer(service));
     }
 }

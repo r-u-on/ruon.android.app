@@ -16,9 +16,9 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.ruon2.android.model.MyPreferenceManager;
 import com.ruon2.android.model.NetworkResult;
+import com.ruon2.android.model.PushRegistration;
 import com.ruon2.android.model.WindowInsetsManager;
 import com.ruon2.android.net.FcmRegisterWS;
 import com.ruon2.android.net.LoginWS;
@@ -90,43 +90,37 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
             String username = binding.email.getText().toString().trim();
             String password = binding.password.getText().toString().trim();
 
-            String fcmToken = MyPreferenceManager.getFcmToken(this);
-            if (fcmToken != null) {
-                onFcmTokenReady(username, password, fcmToken);
+            String pushId = PushRegistration.getCachedPushId(this);
+            if (pushId != null) {
+                onFcmTokenReady(username, password, pushId);
             } else {
-                // onNewToken() has not delivered a token yet (first launch, or the
+                // Firebase has not delivered a push id yet (first launch, or the
                 // callback simply has not fired). Fetch it proactively so login cannot
                 // hang waiting on mGcmChecker for a registration that never starts.
-                UserLog.i(TAG, "No cached FCM token - fetching it proactively");
+                UserLog.i(TAG, "No cached push id - fetching it proactively");
                 fetchFcmTokenThenRegister(username, password);
             }
         }
     }
 
     /**
-     * Actively requests the FCM registration token instead of only waiting for
-     * {@link com.ruon2.android.services.RUOnMessagingService#onNewToken}. On success we
-     * cache it and continue the normal server-registration flow; on failure we surface an
-     * error immediately rather than letting {@link #mGcmChecker} time out silently.
-     *
-     * <p>{@code getToken()} is deprecated in favor of {@code register()}, which identifies the
-     * device by its Firebase Installation ID instead of an FCM registration token. The R-U-On
-     * server (androidNotif) stores and sends to FCM registration tokens, so moving needs a
-     * server-side change first.
+     * Actively requests the push id (FCM token or Firebase Installation ID, see
+     * {@link PushRegistration}) instead of only waiting for the messaging service callback.
+     * On success we cache it and continue the normal server-registration flow; on failure we
+     * surface an error immediately rather than letting {@link #mGcmChecker} time out silently.
      */
-    @SuppressWarnings("deprecation")
     private void fetchFcmTokenThenRegister(String username, String password) {
-        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+        PushRegistration.fetchPushId().addOnCompleteListener(task -> {
             if (binding == null) {
                 return; // activity was torn down while the async fetch was in flight
             }
             if (task.isSuccessful() && task.getResult() != null) {
-                String fcmToken = task.getResult();
-                UserLog.i(TAG, "Fetched FCM token - " + fcmToken);
-                MyPreferenceManager.saveFirebaseToken(this, fcmToken);
-                onFcmTokenReady(username, password, fcmToken);
+                String pushId = task.getResult();
+                UserLog.i(TAG, "Fetched push id - " + pushId);
+                PushRegistration.onPushIdIssued(this, pushId);
+                onFcmTokenReady(username, password, pushId);
             } else {
-                UserLog.e(TAG, "Failed to fetch FCM token - " + task.getException());
+                UserLog.e(TAG, "Failed to fetch push id - " + task.getException());
                 hideProgress();
                 binding.alertMessage.setText(getString(R.string.authentication_error));
             }
@@ -134,7 +128,7 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
     }
 
     /**
-     * Registers this device's FCM token on the R-U-On server (when not already done) and
+     * Registers this device's push id on the R-U-On server (when not already done) and
      * starts polling for that registration to complete.
      */
     private void onFcmTokenReady(String username, String password, String fcmToken) {
@@ -155,18 +149,16 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
     }
 
     /**
-     * Kicks off FCM token retrieval as soon as the screen opens so the token is usually
+     * Kicks off push id retrieval as soon as the screen opens so the id is usually
      * cached by the time the user finishes typing their credentials. Safe to call
-     * repeatedly - FCM returns the already-issued token after the first fetch.
-     * See {@link #fetchFcmTokenThenRegister} for why the deprecated getToken() stays.
+     * repeatedly - Firebase returns the already-issued id after the first fetch.
      */
-    @SuppressWarnings("deprecation")
     private void warmUpFcmToken() {
-        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+        PushRegistration.fetchPushId().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                MyPreferenceManager.saveFirebaseToken(getApplicationContext(), task.getResult());
+                PushRegistration.onPushIdIssued(getApplicationContext(), task.getResult());
             } else {
-                UserLog.e(TAG, "FCM token warm-up failed - " + task.getException());
+                UserLog.e(TAG, "Push id warm-up failed - " + task.getException());
             }
         });
     }
@@ -225,7 +217,7 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
 
     private void checkIsAlreadyLoggedIn() {
         String token = MyPreferenceManager.getToken(this);
-        String pushToken = MyPreferenceManager.getFcmToken(this);
+        String pushToken = PushRegistration.getCachedPushId(this);
         UserLog.i(TAG, "Token - " + token);
         UserLog.i(TAG, "PushToken - " + pushToken);
         if (!TextUtils.isEmpty(token)) {
