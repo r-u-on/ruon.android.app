@@ -2,7 +2,6 @@ package com.ruon2.android.model;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 /**
  * Created by Ivan on 6/26/2015.
@@ -12,43 +11,60 @@ public class MyPreferenceManager {
     private static SharedPreferences sPrefs;
     public static final String TOKEN = "token";
     public static final String FCM_TOKEN = "fcm_token";
+    public static final String FCM_INSTALLATION_ID = "fcm_installation_id";
     public static final String REGISTERED_ON_SERVER = "REGISTERED_ON_SERVER";
 
     private static final String SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE = "shouldShowRequestPermissionRationale";
 
-    public static void saveToken(Context context, String token){
+    public static void saveToken(Context context, String token) {
         SharedPreferences.Editor editor = getEditor(context);
         editor.putString(TOKEN, token);
         editor.commit();
     }
 
-    public static String getToken(Context context){
+    public static String getToken(Context context) {
         return getPrefs(context).getString(TOKEN, null);
     }
 
-    public static void saveFirebaseToken(Context context, String token){
+    public static void saveFirebaseToken(Context context, String token) {
         SharedPreferences.Editor editor = getEditor(context);
         editor.putString(FCM_TOKEN, token);
         editor.commit();
     }
 
-    public static boolean isFcmRegisteredOnOurServer(Context context){
+    public static boolean isFcmRegisteredOnOurServer(Context context) {
         return getPrefs(context).getBoolean(REGISTERED_ON_SERVER, false);
     }
 
-    public static void setFcmRegisteredOnServer(Context context, boolean state){
+    public static void setFcmRegisteredOnServer(Context context, boolean state) {
         SharedPreferences.Editor editor = getEditor(context);
         editor.putBoolean(REGISTERED_ON_SERVER, state);
         editor.commit();
     }
 
-    public static String getFcmToken(Context context){
+    public static String getFcmToken(Context context) {
         return getPrefs(context).getString(FCM_TOKEN, null);
     }
 
-    private static SharedPreferences getPrefs(Context context){
-        if(sPrefs == null){
-            sPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+    public static void saveFcmInstallationId(Context context, String installationId) {
+        SharedPreferences.Editor editor = getEditor(context);
+        editor.putString(FCM_INSTALLATION_ID, installationId);
+        editor.commit();
+    }
+
+    public static String getFcmInstallationId(Context context) {
+        return getPrefs(context).getString(FCM_INSTALLATION_ID, null);
+    }
+
+    /**
+     * Returns the app's default preferences file. Uses the same file name as the deprecated
+     * {@code android.preference.PreferenceManager.getDefaultSharedPreferences()}, so data
+     * saved by earlier versions (login token, FCM state) is kept on upgrade.
+     */
+    public static SharedPreferences getPrefs(Context context) {
+        if (sPrefs == null) {
+            sPrefs = context.getSharedPreferences(
+                    context.getPackageName() + "_preferences", Context.MODE_PRIVATE);
         }
         return sPrefs;
     }
@@ -63,7 +79,7 @@ public class MyPreferenceManager {
         editor.commit();
     }
 
-    private static SharedPreferences.Editor getEditor(Context context){
+    private static SharedPreferences.Editor getEditor(Context context) {
         return getPrefs(context).edit();
     }
 }

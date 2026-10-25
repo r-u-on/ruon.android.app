@@ -13,6 +13,7 @@
             android:id="@+id/mList"
             android:layout_width="0.dp"
             android:layout_height="0.dp"
+            app:layout_constraintWidth_max="@dimen/content_max_width"
             app:layout_constraintBottom_toBottomOf="@id/container"
             app:layout_constraintLeft_toLeftOf="@id/container"
             app:layout_constraintRight_toRightOf="@id/container"
@@ -20,7 +21,7 @@
 
         <TextView
             android:id="@+id/warning_label"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
             android:background="@color/app_green"
@@ -31,6 +32,7 @@
             android:textColor="@android:color/white"
             android:textSize="20sp"
             android:visibility="gone"
+            app:layout_constraintWidth_max="@dimen/content_max_width"
             app:layout_constraintLeft_toLeftOf="@id/container"
             app:layout_constraintRight_toRightOf="@id/container"
             app:layout_constraintTop_toTopOf="@id/container" />

@@ -1,11 +1,11 @@
 package com.ruon2.android.net;
 
-import java.util.List;
-
 import com.ruon2.android.model.NetworkResult;
 import com.ruon2.android.util.TheAlarm;
 import com.ruon2.rssapi.API;
 import com.ruon2.rssapi.Alarm;
+
+import java.util.List;
 
 /**
  * Created by Ivan on 6/26/2015.
@@ -18,20 +18,15 @@ public class AlarmsWS extends NetworkTask {
     NetworkTaskListener mListener;
     NetworkResult result;
 
-    public AlarmsWS(String token,NetworkTaskListener listener){
-        this.token  = token;
+    public AlarmsWS(String token, NetworkTaskListener listener) {
+        this.token = token;
         mListener = listener;
     }
 
     @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-    }
+    protected Object doInBackground() {
 
-    @Override
-    protected Object doInBackground(Object[] objects) {
-
-        API.alarms(token , false, new API.FetchAlarmsListener() {
+        API.alarms(token, false, new API.FetchAlarmsListener() {
             @Override
             public void error(Exception e) {
                 // Handle alarms fetch error
@@ -51,9 +46,6 @@ public class AlarmsWS extends NetworkTask {
 
     @Override
     protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        if(!isCancelled()){
-            mListener.OnResult(result, o);
-        }
+        mListener.OnResult(result, o);
     }
 }

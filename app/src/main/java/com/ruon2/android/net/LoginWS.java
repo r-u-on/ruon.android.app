@@ -9,27 +9,23 @@ import com.ruon2.rssapi.API;
  */
 public class LoginWS extends NetworkTask {
 
-public static final String TAG = LoginWS.class.getSimpleName();
+    private static final String UNKNOWN_ERROR = "Unknown error";
+    public static final String TAG = LoginWS.class.getSimpleName();
+
     String email;
     String password;
     String rawResult;
     NetworkTaskListener mListener;
     NetworkResult result;
-    private static final String UNKNOWN_ERROR = "Unknown error";
 
-    public LoginWS(String email, String password, NetworkTaskListener listener){
+    public LoginWS(String email, String password, NetworkTaskListener listener) {
         this.email = email;
         this.password = password;
         mListener = listener;
     }
 
     @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-    }
-
-    @Override
-    protected Object doInBackground(Object[] objects) {
+    protected Object doInBackground() {
         rawResult = UNKNOWN_ERROR;
         API.authenticate(email, password, new API.AuthenticateListener() {
 
@@ -56,9 +52,6 @@ public static final String TAG = LoginWS.class.getSimpleName();
 
     @Override
     protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        if(!isCancelled()){
-            mListener.OnResult(result, o);
-        }
+        mListener.OnResult(result, o);
     }
 }

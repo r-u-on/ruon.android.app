@@ -5,26 +5,26 @@ import android.util.Log;
 import com.ruon2.app.BuildConfig;
 
 public class UserLog {
-	public static void i(String TAG, String message){
-		if(BuildConfig.DEBUG){
-			Log.i(TAG, message);
-		}
-	}
-	
-	public static void v(String TAG, String message){
-		if(BuildConfig.DEBUG){
-			Log.i(TAG, message);
-		}
-	}
+    public static void i(String TAG, String message) {
+        if (BuildConfig.DEBUG) {
+            Log.i(TAG, message);
+        }
+    }
 
-	public static void e(String TAG, String message) {
-		if (BuildConfig.DEBUG) {
-			Log.e(TAG, message);
-		}
-	}
-	
-	public static void printLongMessage(String tag, String message, String title){
-        if(!BuildConfig.DEBUG){
+    public static void v(String TAG, String message) {
+        if (BuildConfig.DEBUG) {
+            Log.i(TAG, message);
+        }
+    }
+
+    public static void e(String TAG, String message) {
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG, message);
+        }
+    }
+
+    public static void printLongMessage(String tag, String message, String title) {
+        if (!BuildConfig.DEBUG) {
             return;
         }
         int step = message.length() / 500;

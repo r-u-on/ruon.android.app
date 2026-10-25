@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -15,13 +16,9 @@ import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
 
-import com.ruon2.app.R;
-import com.ruon2.app.databinding.ActivityLoginBinding;
-
-import java.util.Calendar;
-
 import com.ruon2.android.model.MyPreferenceManager;
 import com.ruon2.android.model.NetworkResult;
+import com.ruon2.android.model.PushRegistration;
 import com.ruon2.android.model.WindowInsetsManager;
 import com.ruon2.android.net.FcmRegisterWS;
 import com.ruon2.android.net.LoginWS;
@@ -29,6 +26,10 @@ import com.ruon2.android.net.NetworkTask;
 import com.ruon2.android.util.InfoDialog;
 import com.ruon2.android.util.NetworkUtils;
 import com.ruon2.android.util.UserLog;
+import com.ruon2.app.R;
+import com.ruon2.app.databinding.ActivityLoginBinding;
+
+import java.util.Calendar;
 
 public class LoginActivity extends WorkerActivity implements NetworkTask.NetworkTaskListener {
 
@@ -49,6 +50,7 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
         new WindowInsetsManager().handleWindowInsets(this, binding.container);
 
         updateViews();
+        warmUpFcmToken();
     }
 
     @Override
@@ -61,7 +63,7 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
     protected void onPause() {
         if (mTask != null) {
             hideProgress();
-            mTask.cancel(true);
+            mTask.cancel();
         }
         if (mHandler != null) {
             hideProgress();
@@ -87,22 +89,78 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
 
             String username = binding.email.getText().toString().trim();
             String password = binding.password.getText().toString().trim();
-            String token = MyPreferenceManager.getFcmToken(this);
-            if (token != null && !MyPreferenceManager.isFcmRegisteredOnOurServer(this)) {
-                UserLog.i(TAG, "Should register on Server!! - " + username);
-                FcmRegisterWS task = new FcmRegisterWS(username, password, android.os.Build.MODEL, token, (result1, o1) -> {
-                    UserLog.i(TAG, "Server register response! - " + result1);
-                    if (result1 == NetworkResult.OK) {
-                        UserLog.i(TAG, "Successfully registered on server");
-                        MyPreferenceManager.setFcmRegisteredOnServer(this, true);
-                    }
-                });
-                task.execute();
-            }
 
-            mHandler = new Handler();
-            mHandler.postDelayed(mGcmChecker, 2 * DateUtils.SECOND_IN_MILLIS);
+            String pushId = PushRegistration.getCachedPushId(this);
+            if (pushId != null) {
+                onFcmTokenReady(username, password, pushId);
+            } else {
+                // Firebase has not delivered a push id yet (first launch, or the
+                // callback simply has not fired). Fetch it proactively so login cannot
+                // hang waiting on mGcmChecker for a registration that never starts.
+                UserLog.i(TAG, "No cached push id - fetching it proactively");
+                fetchFcmTokenThenRegister(username, password);
+            }
         }
+    }
+
+    /**
+     * Actively requests the push id (FCM token or Firebase Installation ID, see
+     * {@link PushRegistration}) instead of only waiting for the messaging service callback.
+     * On success we cache it and continue the normal server-registration flow; on failure we
+     * surface an error immediately rather than letting {@link #mGcmChecker} time out silently.
+     */
+    private void fetchFcmTokenThenRegister(String username, String password) {
+        PushRegistration.fetchPushId().addOnCompleteListener(task -> {
+            if (binding == null) {
+                return; // activity was torn down while the async fetch was in flight
+            }
+            if (task.isSuccessful() && task.getResult() != null) {
+                String pushId = task.getResult();
+                UserLog.i(TAG, "Fetched push id - " + pushId);
+                PushRegistration.onPushIdIssued(this, pushId);
+                onFcmTokenReady(username, password, pushId);
+            } else {
+                UserLog.e(TAG, "Failed to fetch push id - " + task.getException());
+                hideProgress();
+                binding.alertMessage.setText(getString(R.string.authentication_error));
+            }
+        });
+    }
+
+    /**
+     * Registers this device's push id on the R-U-On server (when not already done) and
+     * starts polling for that registration to complete.
+     */
+    private void onFcmTokenReady(String username, String password, String fcmToken) {
+        if (!MyPreferenceManager.isFcmRegisteredOnOurServer(this)) {
+            UserLog.i(TAG, "Should register on Server!! - " + username);
+            FcmRegisterWS task = new FcmRegisterWS(username, password, android.os.Build.MODEL, fcmToken, (result1, o1) -> {
+                UserLog.i(TAG, "Server register response! - " + result1);
+                if (result1 == NetworkResult.OK) {
+                    UserLog.i(TAG, "Successfully registered on server");
+                    MyPreferenceManager.setFcmRegisteredOnServer(this, true);
+                }
+            });
+            task.execute();
+        }
+
+        mHandler = new Handler(Looper.getMainLooper());
+        mHandler.postDelayed(mGcmChecker, 2 * DateUtils.SECOND_IN_MILLIS);
+    }
+
+    /**
+     * Kicks off push id retrieval as soon as the screen opens so the id is usually
+     * cached by the time the user finishes typing their credentials. Safe to call
+     * repeatedly - Firebase returns the already-issued id after the first fetch.
+     */
+    private void warmUpFcmToken() {
+        PushRegistration.fetchPushId().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                PushRegistration.onPushIdIssued(getApplicationContext(), task.getResult());
+            } else {
+                UserLog.e(TAG, "Push id warm-up failed - " + task.getException());
+            }
+        });
     }
 
     /**
@@ -159,7 +217,7 @@ public class LoginActivity extends WorkerActivity implements NetworkTask.Network
 
     private void checkIsAlreadyLoggedIn() {
         String token = MyPreferenceManager.getToken(this);
-        String pushToken = MyPreferenceManager.getFcmToken(this);
+        String pushToken = PushRegistration.getCachedPushId(this);
         UserLog.i(TAG, "Token - " + token);
         UserLog.i(TAG, "PushToken - " + pushToken);
         if (!TextUtils.isEmpty(token)) {

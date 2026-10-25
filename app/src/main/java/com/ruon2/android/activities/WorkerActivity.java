@@ -12,16 +12,16 @@ import com.ruon2.app.R;
  */
 public abstract class WorkerActivity extends AppCompatActivity {
 
-    public void showProgress(){
-        LinearLayout progress = (LinearLayout) findViewById(R.id.progress_bar);
-        if(progress != null){
+    public void showProgress() {
+        LinearLayout progress = findViewById(R.id.progress_bar);
+        if (progress != null) {
             progress.setVisibility(View.VISIBLE);
         }
     }
 
-    public void hideProgress(){
-        LinearLayout progress = (LinearLayout) findViewById(R.id.progress_bar);
-        if(progress != null){
+    public void hideProgress() {
+        LinearLayout progress = findViewById(R.id.progress_bar);
+        if (progress != null) {
             progress.setVisibility(View.GONE);
         }
     }

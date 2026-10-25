@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,15 +12,13 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.ActionBar;
+import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.gson.Gson;
-import com.ruon2.app.R;
-import com.ruon2.app.databinding.ActivityMainBinding;
-
-import java.util.ArrayList;
-
 import com.ruon2.android.model.AlarmAdapter;
 import com.ruon2.android.model.MyPreferenceManager;
 import com.ruon2.android.model.NetworkResult;
@@ -32,8 +29,15 @@ import com.ruon2.android.net.NetworkTask;
 import com.ruon2.android.util.NetworkUtils;
 import com.ruon2.android.util.TheAlarm;
 import com.ruon2.android.util.UserLog;
+import com.ruon2.app.R;
+import com.ruon2.app.databinding.ActivityMainBinding;
 
-public class MainActivity extends WorkerActivity implements NetworkTask.NetworkTaskListener, AdapterView.OnItemClickListener,
+import java.util.List;
+
+public class MainActivity
+        extends WorkerActivity
+        implements NetworkTask.NetworkTaskListener,
+        AdapterView.OnItemClickListener,
         SwipeRefreshLayout.OnRefreshListener {
 
     private final String TAG = MainActivity.class.getSimpleName();
@@ -50,6 +54,10 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
     private IntentFilter filter;
     private NotificationPermissionManager notificationPermissionManager
             = new NotificationPermissionManager(getActivityResultRegistry());
+    // Coming back from alarm details must not trigger a refresh in onResume().
+    private final ActivityResultLauncher<Intent> alarmDetailsLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> mShouldRefresh = false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +75,9 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
     protected void onResume() {
         super.onResume();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(receiver, filter);
-        }
+        // Internal-only broadcast: always register as NOT_EXPORTED. ContextCompat
+        // applies the correct flag across all API levels (required for target SDK 36).
+        ContextCompat.registerReceiver(this, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         if (mShouldRefresh) {
             showProgress();
@@ -91,7 +97,7 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
     protected void onPause() {
         if (mTask != null) {
             hideProgress();
-            mTask.cancel(true);
+            mTask.cancel();
         }
         mShouldRefresh = true;
         unregisterReceiver(receiver);
@@ -105,18 +111,12 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        mShouldRefresh = false;
-    }
-
-    @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
         Intent alarmDetails = new Intent(this, AlarmDetailsActivity.class);
         TheAlarm alarm = getAdapter().getItem(position);
         UserLog.i(TAG, "OnAlarm click - " + alarm);
         alarmDetails.putExtra(TheAlarm.TAG, new Gson().toJson(alarm));
-        startActivityForResult(alarmDetails, 11);
+        alarmDetailsLauncher.launch(alarmDetails);
     }
 
     @Override
@@ -140,12 +140,14 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
         hideProgress();
         if (result == NetworkResult.OK) {
             if (o != null) {
-                ArrayList<TheAlarm> items = (ArrayList<TheAlarm>) o;
+                // AlarmsWS delivers the List<TheAlarm> built by TheAlarm.convert().
+                @SuppressWarnings("unchecked")
+                List<TheAlarm> items = (List<TheAlarm>) o;
                 UserLog.i(TAG, "result - " + items.size());
                 if (items.size() == 0) {
                     // if(true){
                     mNoAlarmsLabel.setText(getString(R.string.no_alarms_title));
-                    mNoAlarmsLabel.setBackgroundColor(getResources().getColor(R.color.app_green));
+                    mNoAlarmsLabel.setBackgroundColor(ContextCompat.getColor(this, R.color.app_green));
                     mNoAlarmsLabel.setVisibility(View.VISIBLE);
                 } else {
                     getAdapter().swapData(items);
@@ -157,7 +159,7 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
             String message = (String) o;
             UserLog.i(TAG, "Error message - " + message);
             mNoAlarmsLabel.setText(message);
-            mNoAlarmsLabel.setBackgroundColor(getResources().getColor(R.color.app_critical));
+            mNoAlarmsLabel.setBackgroundColor(ContextCompat.getColor(this, R.color.app_critical));
             mNoAlarmsLabel.setVisibility(View.VISIBLE);
         }
     }
@@ -188,7 +190,7 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
         } else {
             mList.setAdapter(null);
             mNoAlarmsLabel.setText(getString(R.string.network_error));
-            mNoAlarmsLabel.setBackgroundColor(getResources().getColor(R.color.app_critical));
+            mNoAlarmsLabel.setBackgroundColor(ContextCompat.getColor(this, R.color.app_critical));
             mNoAlarmsLabel.setVisibility(View.VISIBLE);
             hideProgress();
         }
@@ -197,9 +199,9 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
     private void updateViews() {
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
         getSupportActionBar().setIcon(R.drawable.logo_padding);
-        mRefresher = (SwipeRefreshLayout) findViewById(R.id.refresher);
+        mRefresher = findViewById(R.id.refresher);
         mRefresher.setOnRefreshListener(this);
-        mList = (ListView) findViewById(R.id.mList);
+        mList = findViewById(R.id.mList);
         mList.setAdapter(getAdapter());
         mList.setOnItemClickListener(this);
         mList.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -209,7 +211,7 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem,
-                                 int visibleItemCount, int totalItemCount) {
+                    int visibleItemCount, int totalItemCount) {
                 int topRowVerticalPosition =
                         (mList == null || mList.getChildCount() == 0) ?
                                 0 : mList.getChildAt(0).getTop();
@@ -217,7 +219,7 @@ public class MainActivity extends WorkerActivity implements NetworkTask.NetworkT
                         topRowVerticalPosition >= 0);
             }
         });
-        mNoAlarmsLabel = (TextView) findViewById(R.id.warning_label);
+        mNoAlarmsLabel = findViewById(R.id.warning_label);
     }
 
     private AlarmAdapter getAdapter() {

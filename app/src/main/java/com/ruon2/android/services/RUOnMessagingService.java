@@ -14,19 +14,19 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.TaskStackBuilder;
+import androidx.core.content.ContextCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.ruon2.android.activities.MainActivity;
+import com.ruon2.android.model.PushRegistration;
+import com.ruon2.android.util.TheAlarm;
+import com.ruon2.android.util.UserLog;
 import com.ruon2.app.R;
 
 import org.json.JSONObject;
 
 import java.util.Map;
-
-import com.ruon2.android.activities.MainActivity;
-import com.ruon2.android.model.MyPreferenceManager;
-import com.ruon2.android.util.TheAlarm;
-import com.ruon2.android.util.UserLog;
 
 public class RUOnMessagingService extends FirebaseMessagingService {
     private static final String TAG = RUOnMessagingService.class.getSimpleName();
@@ -67,7 +67,7 @@ public class RUOnMessagingService extends FirebaseMessagingService {
                         .setSmallIcon(R.drawable.notification)
                         .setContentTitle(getString(R.string.app_name))
                         .setAutoCancel(true)
-                        .setColor(getResources().getColor(R.color.app_green))
+                        .setColor(ContextCompat.getColor(this, R.color.app_green))
                         .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE)
                         .setContentText(title);
         String sound = getSound(soundRaw);
@@ -110,6 +110,9 @@ public class RUOnMessagingService extends FirebaseMessagingService {
         Notification ntf = mBuilder.build();
         mNotificationManager.notify(sNotificationId, ntf);
         Intent intent = new Intent(MainActivity.NOTIFICATION_EVENT);
+        // Scope the broadcast to this app so it is delivered reliably under the
+        // Android 14+ implicit-broadcast restrictions (target SDK 36).
+        intent.setPackage(getPackageName());
         sendBroadcast(intent);
     }
 
@@ -243,10 +246,20 @@ public class RUOnMessagingService extends FirebaseMessagingService {
         return "android.resource://" + getPackageName() + "/" + path;
     }
 
+    // Token mode (ruon.fcmUseInstallationId=false). Deprecated with getToken() in favor of
+    // onRegistered(); see PushRegistration.
+    @SuppressWarnings("deprecation")
     @Override
     public void onNewToken(@NonNull String token) {
         UserLog.i(TAG, "onNewToken called, new Firebase token: " + token);
-        MyPreferenceManager.saveFirebaseToken(getBaseContext(), token);
-        MyPreferenceManager.setFcmRegisteredOnServer(getBaseContext(), false);
+        PushRegistration.onPushIdIssued(getBaseContext(), token, false);
+    }
+
+    // Installation-id mode (ruon.fcmUseInstallationId=true). Called after every successful
+    // FirebaseMessaging.register(), including when the id has not changed.
+    @Override
+    public void onRegistered(@NonNull String installationId) {
+        UserLog.i(TAG, "onRegistered called, Firebase Installation ID: " + installationId);
+        PushRegistration.onPushIdIssued(getBaseContext(), installationId, true);
     }
 }

@@ -8,22 +8,23 @@ package com.ruon2.android.net;
 
 import android.text.format.DateUtils;
 
+import com.ruon2.android.model.NetworkResult;
+import com.ruon2.android.util.UserLog;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-
-import com.ruon2.android.model.NetworkResult;
-import com.ruon2.android.util.UserLog;
 
 /**
  * Created by Ivan on 6/26/2015.
  */
 public class FcmRegisterWS extends NetworkTask {
 
-public static final String TAG = FcmRegisterWS.class.getSimpleName();
+    public static final String TAG = FcmRegisterWS.class.getSimpleName();
     String email;
     String password;
     String mName;
@@ -32,17 +33,20 @@ public static final String TAG = FcmRegisterWS.class.getSimpleName();
     NetworkResult result;
     private static final String UNKNOWN_ERROR = "Unknown error";
 
-    public FcmRegisterWS(String email, String password, String name, String token, NetworkTaskListener listener){
+    public FcmRegisterWS(String email, String password, String name, String token, NetworkTaskListener listener) {
         this.email = email;
         this.password = password;
-        this.mName = URLEncoder.encode(name);
+        this.mName = encode(name);
         this.mToken = token;
         mListener = listener;
     }
 
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
+    private static String encode(String value) {
+        try {
+            return URLEncoder.encode(value, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new AssertionError("UTF-8 is always supported", e);
+        }
     }
 
 //    @Override
@@ -75,19 +79,20 @@ public static final String TAG = FcmRegisterWS.class.getSimpleName();
 //    }
 
     @Override
-    protected Object doInBackground(Object[] objects) {
+    protected Object doInBackground() {
         HttpURLConnection urlConnection = null;
         try {
             // Construct the URL
-            String urlString = String.format("https://www.r-u-on.com/androidNotif?email=%s&password=%s&name=%s&device=%s", email, password, mName, mToken);
+            String urlString = String.format("https://www.r-u-on.com/androidNotif?email=%s&password=%s&name=%s&device=%s", email, password, mName,
+                    mToken);
             URL url = new URL(urlString);
             UserLog.i(TAG, "New WS URL - " + urlString);
 
             // Open connection
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
-            urlConnection.setConnectTimeout(20 * (int)DateUtils.SECOND_IN_MILLIS);
-            urlConnection.setReadTimeout(20 * (int)DateUtils.SECOND_IN_MILLIS);
+            urlConnection.setConnectTimeout(20 * (int) DateUtils.SECOND_IN_MILLIS);
+            urlConnection.setReadTimeout(20 * (int) DateUtils.SECOND_IN_MILLIS);
             urlConnection.setRequestProperty("Accept", "application/json");
 
             // Initiate the connection
@@ -131,11 +136,8 @@ public static final String TAG = FcmRegisterWS.class.getSimpleName();
 
     @Override
     protected void onPostExecute(Object o) {
-        super.onPostExecute(o);
-        if(!isCancelled()){
-            if(mListener != null){
-                mListener.OnResult(result, o);
-            }
+        if (mListener != null) {
+            mListener.OnResult(result, o);
         }
     }
 }

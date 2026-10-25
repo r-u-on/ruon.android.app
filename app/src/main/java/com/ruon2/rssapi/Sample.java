@@ -4,9 +4,9 @@ import java.util.List;
 
 public class Sample {
 
-    public static void main(String [] params) {
+    public static void main(String[] params) {
 
-        if (params.length!=2) {
+        if (params.length != 2) {
             System.err.println("Please execute me with two params: <email> <password>");
             return;
         }
@@ -43,10 +43,10 @@ public class Sample {
                     protected void alarms(List<Alarm> alarms) {
                         // Display the list of alarms
 
-                        if (alarms.size()==0) {
+                        if (alarms.size() == 0) {
                             System.out.println("There are no alarms :-)");
                         } else {
-                            for (Alarm alarm:alarms) {
+                            for (Alarm alarm : alarms) {
                                 System.out.println(alarm);
                             }
                         }
