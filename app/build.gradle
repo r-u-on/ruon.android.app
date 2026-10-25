@@ -34,7 +34,7 @@ android {
         applicationId = "com.ruon2.app"
         minSdk = 25
         targetSdk = 36
-        versionCode = 304
+        versionCode = 305
         versionName = "3.0.4"
         multiDexEnabled = true
 
