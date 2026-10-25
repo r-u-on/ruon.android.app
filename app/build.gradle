@@ -18,6 +18,14 @@ if (hasReleaseKeystore) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// Production signing for the prodRelease build type. Same format as keystore.properties.
+def prodKeystorePropertiesFile = rootProject.file("app/keystore-prod.properties")
+def prodKeystoreProperties = new Properties()
+def hasProdKeystore = prodKeystorePropertiesFile.exists()
+if (hasProdKeystore) {
+    prodKeystoreProperties.load(new FileInputStream(prodKeystorePropertiesFile))
+}
+
 android {
     namespace = 'com.ruon2.app'
     compileSdk = 36
@@ -57,6 +65,15 @@ android {
                 keyPassword = keystoreProperties['keyPassword']
             }
         }
+
+        if (hasProdKeystore) {
+            prod {
+                storeFile = file(prodKeystoreProperties['storeFile'])
+                storePassword = prodKeystoreProperties['storePassword']
+                keyAlias = prodKeystoreProperties['keyAlias']
+                keyPassword = prodKeystoreProperties['keyPassword']
+            }
+        }
     }
 
     buildTypes {
@@ -66,6 +83,13 @@ android {
             }
             minifyEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        // Same as release, signed with the production keystore from app/keystore-prod.properties.
+        // Without that file the APK is left unsigned rather than signed with another key.
+        prodRelease {
+            initWith release
+            signingConfig = hasProdKeystore ? signingConfigs.prod : null
         }
 
         debug {

@@ -32,5 +32,6 @@ app/google-services.json
 # Android Profiling
 *.hprof
 /app/keystore.properties
+/app/keystore-prod.properties
 /app/release/app-release.aab
 /app/keyStore
